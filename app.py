@@ -60,6 +60,7 @@ for c in ['H9_y', 'BB9_y', '2B-A9_y', '3B-A9_y', 'HR-A9_y', 'SO9_y','SHA9_y', 'S
 
 # Initialize the app
 app = Dash(__name__)
+server = app.server
 
 # App layout
 app.layout = html.Div([
