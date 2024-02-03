@@ -86,7 +86,14 @@ app.layout = html.Div([
     
     html.H3(children='Performance Ranking Trend:'),
     dcc.RadioItems(['Overall','Hitting','Pitching'],'Overall',inline=True,id='graphtype'),
-    dcc.Graph(id="graph")
+    dcc.Graph(id="trendgraph"),
+
+    html.H4(children='At-Bat Breakdown:'),
+    dcc.Graph(id='batstylegraph'),
+    html.H4(children='Out Breakdown:'),
+    dcc.Graph(id='outstylegraph'),
+    html.H4(children='Hit Breakdown:'),
+    dcc.Graph(id='hitstylegraph'),
 ])
 
 
@@ -144,14 +151,14 @@ def updateheadtohead(teamfilter,teamfilter2):
 
 
 
-#Chart
+#Trend Chart
 @app.callback(
-    Output("graph", "figure"),
+    Output("trendgraph", "figure"),
     Input(component_id='teamdropdown', component_property='value'),
     Input(component_id='teamdropdown2', component_property='value'),
     Input(component_id='graphtype', component_property='value'),
 )
-def display_color(team,team2,graphtype):
+def trendgraph(team,team2,graphtype):
     #fig = go.Figure(go.Bar(x=x, y=[2, 3, 1], marker_color='red'))
     #fig = go.Figure()
     if graphtype=='Overall':
@@ -163,6 +170,34 @@ def display_color(team,team2,graphtype):
     
     fig = px.line(df[df["ncaa_name"].isin([team,team2])].rename(columns={'HitValue':'Runs Above Average','PitchValue':'Runs Allowed Above Average','NetValue':'Margin vs Average Opponent'}),x='RankDate',y=y, color="ncaa_name")
     return fig
+
+
+#Style Chart
+@app.callback(
+    Output("batstylegraph", "figure"),
+    Output("outstylegraph", "figure"),
+    Output("hitstylegraph", "figure"),
+    [Input(component_id='teamdropdown', component_property='value'),
+    Input(component_id='teamdropdown2', component_property='value'),
+    Input(component_id='headtohead',component_property='data'),]
+)
+def stylechart(team,team2,data):
+    if data:
+        data=pd.DataFrame.from_records(data)
+        #Divide by PlayWeights to get occurance numbers
+        for k in ['H','BB','2B-A','3B-A','HR-A','SO','SHA','SFA','GO','FO']:
+            data[k]=data[k]/playweights[k]
+        #Create Summary Metrics
+        data['1B']=(data['H']-data['2B-A']-data['3B-A']-data['HR-A']) #Singles
+        data['Out']=data['GO']+data['SO']+data['FO']
+        #dataset=data[['ncaa_name','SO','GO','FO','1B','2B-A','3B-A','HR-A']].copy()
+        data['marker']=10
+        
+        #return data[['ncaa_name','SO','GO','FO','1B','2B-A','3B-A','HR-A']].to_dict('records')
+        fig1 = px.scatter_ternary(data, a="H", b="Out", c="BB",color='ncaa_name',size='marker')
+        fig2 = px.scatter_ternary(data, a="FO", b="SO", c="GO",color='ncaa_name',size='marker')
+        fig3 = px.scatter_ternary(data, a="HR-A", b="1B", c="2B-A",color='ncaa_name',size='marker')
+    return fig1,fig2,fig3
 
 # Run the app
 if __name__ == '__main__':
