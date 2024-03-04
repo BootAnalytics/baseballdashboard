@@ -8,7 +8,7 @@ from dash.dependencies import Input, Output
 # Incorporate data
 #df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv')
 #df = pd.read_csv('baseballpower.csv')
-df = pd.read_csv('baseballrankings2023.csv')
+df = pd.read_csv('baseballrankings2024.csv')
 dfrank = df.copy()
 
 playmeans = {'H9': 6.134250750678779,
